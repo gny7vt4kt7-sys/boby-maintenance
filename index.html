@@ -1,195 +1,926 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lumière Wellness</title>
-    <!-- 読み込みエラーを防ぐため、標準的なライブラリに統一 -->
-    <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
-    <style>
-        :root {
-          --ink: #1a1118; --parchment: #faf6f0; --blush: #f2e8e0;
-          --rose: #c97a7a; --roseDark: #a85a5a; --gold: #c9a96e;
-          --sage: #8aab96; --text: #3a2a32; --textMid: #7a6070;
-          --textFaint: #b0a0a8; --border: rgba(201,169,110,0.2);
-          --cardBg: rgba(255,252,248,0.92); --ff: 'Playfair Display', serif; --fs: 'Jost', sans-serif;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: var(--ink); font-family: var(--fs); background-color: var(--parchment); }
-        .lm { max-width: 430px; margin: 0 auto; min-height: 100vh; background: var(--parchment); color: var(--text); padding: 20px; position: relative; }
-        .hero { padding: 30px 10px; position: relative; }
-        .hero-eyebrow { font-size: 9px; letter-spacing: 0.35em; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
-        .hero-name { font-family: var(--ff); font-size: 42px; font-weight: 300; color: var(--ink); }
-        .hero-name em { font-style: italic; color: var(--roseDark); }
-        .hero-tagline { font-size: 11px; color: var(--textMid); margin-top: 10px; letter-spacing: 0.05em; }
-        .nav-strip { display: flex; overflow-x: auto; gap: 10px; margin: 20px 0; padding-bottom: 5px; }
-        .nav-btn { padding: 8px 12px; background: none; border: none; border-bottom: 2px solid transparent; font-size: 11px; color: var(--textFaint); cursor: pointer; white-space: nowrap; }
-        .nav-btn.on { color: var(--roseDark); border-bottom-color: var(--rose); font-weight: bold; }
-        .card { background: var(--cardBg); border: 1px solid var(--border); border-radius: 6px; padding: 18px; margin-bottom: 15px; }
-        .stats3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .stat-c { background: var(--blush); padding: 12px 5px; text-align: center; border-radius: 4px; }
-        .stat-n { font-size: 22px; font-weight: bold; color: var(--roseDark); }
-        .stat-l { font-size: 9px; color: var(--textMid); margin-top: 4px; }
-        .lbl { display: block; font-size: 10px; color: var(--textMid); margin-bottom: 5px; }
-        .inp { width: 100%; padding: 10px; background: var(--blush); border: 1px solid var(--border); border-radius: 4px; margin-bottom: 10px; outline: none; }
-        .btn-primary { width: 100%; padding: 12px; background: var(--roseDark); border: none; color: white; border-radius: 4px; cursor: pointer; font-size: 12px; letter-spacing: 0.1em; }
-        .btn-sm { padding: 4px 8px; background: var(--blush); border: 1px solid var(--rose); color: var(--roseDark); border-radius: 3px; font-size: 11px; cursor: pointer; }
-        .fi { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--blush); font-size: 13px; }
-        .ai-wrap { background: white; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
-        .ai-msgs { padding: 15px; min-height: 160px; max-height: 250px; overflow-y: auto; font-size: 13px; }
-        .msg-a { background: var(--blush); padding: 8px 12px; border-radius: 4px; margin-bottom: 8px; inline-size: fit-content; max-width: 90%; }
-        .msg-u { background: var(--roseDark); color: white; padding: 8px 12px; border-radius: 4px; margin-bottom: 8px; margin-left: auto; text-align: right; width: fit-content; max-width: 90%; }
-        .ai-inp-row { display: flex; border-top: 1px solid var(--border); }
-        .ai-inp { flex: 1; padding: 10px; border: none; outline: none; }
-        .ai-send { padding: 10px 15px; background: var(--roseDark); color: white; border: none; cursor: pointer; }
-        .bmi-big { text-align: center; font-size: 32px; color: var(--roseDark); font-family: var(--ff); padding: 10px; }
-        .footer { text-align: center; font-size: 10px; color: var(--textFaint); margin-top: 30px; padding-bottom: 20px; }
-    </style>
-</head>
-<body>
-    <div id="root"></div>
+import { useState, useEffect, useRef, useCallback } from "react";
 
-    <script type="text/babel">
-        const { useState } = React;
+/* ── Google Fonts ── */
+const fl = document.createElement("link");
+fl.rel = "stylesheet";
+fl.href = "https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,300;0,400;0,700;1,300;1,500&family=Jost:wght@200;300;400;500&display=swap";
+document.head.appendChild(fl);
 
-        const QUICK = [
-          { name: "白米 (茶碗1杯)", cal: 252 },
-          { name: "目玉焼き", cal: 91 },
-          { name: "バナナ", cal: 86 },
-          { name: "サラダチキン", cal: 105 }
-        ];
+/* ══════════════════════════════════════════
+   GLOBAL CSS
+══════════════════════════════════════════ */
+const G = `
+:root {
+  --ink: #1a1118;
+  --parchment: #faf6f0;
+  --blush: #f2e8e0;
+  --rose: #c97a7a;
+  --roseDark: #a85a5a;
+  --gold: #c9a96e;
+  --goldLight: #e8cfa0;
+  --sage: #8aab96;
+  --sageDark: #5e8870;
+  --mist: #e8e0ec;
+  --purple: #9b7bb8;
+  --text: #3a2a32;
+  --textMid: #7a6070;
+  --textFaint: #b0a0a8;
+  --border: rgba(201,169,110,0.2);
+  --cardBg: rgba(255,252,248,0.92);
+  --ff: 'Playfair Display', Georgia, serif;
+  --fs: 'Jost', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--ink); }
 
-        function Lumiere() {
-          const [tab, setTab] = useState("today");
-          const [foods, setFoods] = useState([]);
-          const [foodName, setFoodName] = useState("");
-          const [foodCal, setFoodCal] = useState("");
-          const [steps, setSteps] = useState(0);
-          const [stepsInput, setStepsInput] = useState("");
-          const [weight, setWeight] = useState("56.0");
-          const [weightInput, setWeightInput] = useState("");
-          const [mood, setMood] = useState("未記録");
-          const [msgs, setMsgs] = useState([{ role: "ai", text: "こんにちは ✨ 今日の体調や食事を教えてくださいね。" }]);
-          const [aiInput, setAiInput] = useState("");
+.lm { font-family: var(--fs); background: var(--parchment); min-height: 100vh; color: var(--text); max-width: 430px; margin: 0 auto; overflow-x: hidden; position: relative; }
+.lm::before { content: ''; position: fixed; inset: 0; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E"); pointer-events: none; z-index: 0; }
 
-          const totalCal = foods.reduce((s, f) => s + f.cal, 0);
-          const calorieGoal = 1600;
-          const remaining = Math.max(0, calorieGoal - totalCal);
-          const stepKcal = Math.round(steps * 0.04 * (parseFloat(weight) / 60));
+/* ── HERO ── */
+.hero { position: relative; padding: 44px 28px 28px; overflow: hidden; z-index: 1; }
+.hero-mesh { position: absolute; top: -80px; right: -80px; width: 320px; height: 320px; background: radial-gradient(ellipse at 60% 40%, rgba(201,169,110,0.22) 0%, rgba(201,121,122,0.1) 40%, transparent 70%); pointer-events: none; }
+.hero-mesh2 { position: absolute; bottom: -40px; left: -60px; width: 200px; height: 200px; background: radial-gradient(ellipse, rgba(138,171,150,0.15) 0%, transparent 70%); pointer-events: none; }
+.hero-eyebrow { font-size: 9px; letter-spacing: 0.35em; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; font-weight: 500; }
+.hero-name { font-family: var(--ff); font-size: 48px; font-weight: 300; line-height: 0.95; color: var(--ink); }
+.hero-name em { font-style: italic; color: var(--roseDark); }
+.hero-date { position: absolute; top: 46px; right: 28px; font-size: 10px; color: var(--textFaint); letter-spacing: 0.1em; text-align: right; line-height: 1.7; }
+.hero-tagline { font-size: 11px; color: var(--textMid); letter-spacing: 0.12em; margin-top: 10px; font-weight: 300; }
 
-          const addFood = (name, cal) => {
-            if (!name || !cal) return;
-            setFoods([...foods, { name, cal: parseInt(cal), id: Date.now() }]);
-            setFoodName(""); setFoodCal("");
-          };
+/* ── NAV ── */
+.nav-strip { display: flex; overflow-x: auto; scrollbar-width: none; padding: 0 16px; gap: 2px; z-index: 1; position: relative; margin-bottom: 4px; }
+.nav-strip::-webkit-scrollbar { display: none; }
+.nav-btn { flex-shrink: 0; padding: 10px 14px; background: none; border: none; border-bottom: 2px solid transparent; font-family: var(--fs); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--textFaint); cursor: pointer; transition: all 0.2s; font-weight: 500; white-space: nowrap; }
+.nav-btn.on { color: var(--roseDark); border-bottom-color: var(--rose); }
 
-          const sendAI = () => {
-            if (!aiInput.trim()) return;
-            setMsgs([...msgs, 
-              { role: "user", text: aiInput },
-              { role: "ai", text: "素晴らしい記録ですね！その調子で心地よい毎日を過ごしましょう 🌸" }
-            ]);
-            setAiInput("");
-          };
+/* ── SECTION ── */
+.sec { padding: 20px 18px 4px; position: relative; z-index: 1; }
+.sec-lbl { font-size: 8.5px; letter-spacing: 0.35em; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+.sec-lbl::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--gold), transparent); opacity: 0.4; }
 
-          return (
-            <div className="lm">
-              <div className="hero">
-                <div className="hero-eyebrow">Wellness Journal</div>
-                <div className="hero-name">Lu<em>mière</em></div>
-                <div className="hero-tagline">内側から輝く、あなたのために</div>
+/* ── CARD ── */
+.card { background: var(--cardBg); border: 1px solid var(--border); border-radius: 6px; padding: 20px; margin-bottom: 14px; position: relative; overflow: hidden; backdrop-filter: blur(4px); }
+.card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(201,169,110,0.5), transparent); }
+.card-h { font-family: var(--ff); font-size: 19px; font-weight: 300; color: var(--ink); margin-bottom: 16px; }
+.card-h em { font-style: italic; color: var(--rose); }
+
+/* ── STATS ROW ── */
+.stats3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin-bottom: 16px; }
+.stat-c { background: var(--parchment); padding: 14px 8px; text-align: center; }
+.stat-n { font-family: var(--ff); font-size: 28px; font-weight: 300; color: var(--roseDark); line-height: 1; }
+.stat-u { font-size: 9px; color: var(--textFaint); letter-spacing: 0.1em; margin-top: 1px; }
+.stat-l { font-size: 8px; color: var(--textMid); letter-spacing: 0.2em; text-transform: uppercase; margin-top: 4px; }
+
+/* ── PROGRESS ── */
+.prog { margin-bottom: 12px; }
+.prog-hd { display: flex; justify-content: space-between; margin-bottom: 5px; }
+.prog-nm { font-size: 10px; color: var(--textMid); letter-spacing: 0.1em; font-weight: 400; }
+.prog-vl { font-size: 10px; color: var(--textFaint); }
+.prog-track { height: 3px; background: var(--blush); border-radius: 2px; overflow: hidden; }
+.prog-fill { height: 100%; border-radius: 2px; transition: width 1s cubic-bezier(.4,0,.2,1); }
+
+/* ── INPUTS ── */
+.lbl { display: block; font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--textMid); margin-bottom: 7px; font-weight: 500; }
+.inp { width: 100%; padding: 11px 14px; background: var(--blush); border: 1px solid rgba(201,169,110,0.25); border-radius: 4px; font-size: 13px; color: var(--text); font-family: var(--fs); outline: none; transition: border-color 0.2s; font-weight: 300; }
+.inp:focus { border-color: rgba(201,121,122,0.5); }
+.inp::placeholder { color: var(--textFaint); }
+.sel { width: 100%; padding: 11px 14px; background: var(--blush); border: 1px solid rgba(201,169,110,0.25); border-radius: 4px; font-size: 13px; color: var(--text); font-family: var(--fs); outline: none; appearance: none; cursor: pointer; font-weight: 300; }
+.ig { margin-bottom: 14px; }
+
+/* ── BUTTONS ── */
+.btn-primary { width: 100%; padding: 13px; background: linear-gradient(135deg, var(--rose) 0%, var(--roseDark) 100%); border: none; border-radius: 4px; font-family: var(--fs); font-size: 10px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: #fff; cursor: pointer; transition: all 0.2s; }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(168,90,90,0.3); }
+.btn-gold { width: 100%; padding: 13px; background: linear-gradient(135deg, var(--gold) 0%, #b8904a 100%); border: none; border-radius: 4px; font-family: var(--fs); font-size: 10px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink); cursor: pointer; transition: all 0.2s; }
+.btn-gold:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(201,169,110,0.4); }
+.btn-sage { width: 100%; padding: 13px; background: linear-gradient(135deg, var(--sage) 0%, var(--sageDark) 100%); border: none; border-radius: 4px; font-family: var(--fs); font-size: 10px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: #fff; cursor: pointer; transition: all 0.2s; }
+.btn-sm { padding: 7px 14px; background: rgba(201,121,122,0.1); border: 1px solid rgba(201,121,122,0.25); border-radius: 3px; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--roseDark); cursor: pointer; font-family: var(--fs); transition: all 0.2s; font-weight: 500; }
+.btn-sm:hover { background: rgba(201,121,122,0.2); }
+.btn-del { background: none; border: none; color: var(--textFaint); cursor: pointer; font-size: 15px; padding: 4px 8px; transition: color 0.2s; }
+.btn-del:hover { color: var(--rose); }
+.pill-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.pill { padding: 7px 14px; border-radius: 20px; border: 1px solid var(--border); font-size: 10px; letter-spacing: 0.12em; color: var(--textMid); background: transparent; cursor: pointer; transition: all 0.2s; font-family: var(--fs); font-weight: 400; }
+.pill.on { background: rgba(201,121,122,0.12); border-color: rgba(201,121,122,0.4); color: var(--roseDark); font-weight: 500; }
+.grid2 { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; margin-bottom: 14px; }
+.grid4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+
+/* ── FOOD ITEMS ── */
+.fi { display: flex; align-items: center; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid var(--blush); }
+.fi-name { font-size: 13px; color: var(--text); font-weight: 300; }
+.fi-meta { font-size: 10px; color: var(--textFaint); margin-top: 2px; letter-spacing: 0.05em; }
+.fi-tag { font-size: 8px; letter-spacing: 0.12em; padding: 2px 8px; background: rgba(201,169,110,0.12); color: var(--gold); border-radius: 10px; margin-left: 6px; font-weight: 500; }
+.total-box { margin-top: 14px; padding: 14px; background: linear-gradient(135deg, rgba(201,121,122,0.08), rgba(201,169,110,0.08)); border: 1px solid var(--border); border-radius: 4px; text-align: center; }
+.total-box-n { font-family: var(--ff); font-size: 30px; font-weight: 300; color: var(--roseDark); }
+.total-box-l { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--textMid); margin-top: 2px; }
+
+/* ── AI CHAT ── */
+.ai-wrap { background: var(--cardBg); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin-bottom: 14px; }
+.ai-hdr { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; background: linear-gradient(135deg, rgba(201,121,122,0.06), rgba(201,169,110,0.04)); }
+.ai-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--sage); animation: blink 2.2s ease-in-out infinite; }
+@keyframes blink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.8)} }
+.ai-hdr-txt { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--textMid); font-weight: 500; }
+.ai-hdr-badge { margin-left: auto; font-size: 8px; padding: 3px 8px; border: 1px solid rgba(138,171,150,0.4); color: var(--sage); border-radius: 2px; letter-spacing: 0.1em; font-weight: 500; }
+.ai-msgs { padding: 16px 18px; max-height: 340px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+.msg-u { align-self: flex-end; background: linear-gradient(135deg, var(--rose), var(--roseDark)); color: #fff; border-radius: 14px 14px 3px 14px; padding: 10px 15px; font-size: 13px; max-width: 80%; line-height: 1.6; font-weight: 300; }
+.msg-a { align-self: flex-start; background: var(--blush); border: 1px solid var(--border); color: var(--text); border-radius: 14px 14px 14px 3px; padding: 10px 15px; font-size: 13px; max-width: 88%; line-height: 1.7; font-weight: 300; }
+.msg-thinking { align-self: flex-start; color: var(--textFaint); font-size: 12px; font-style: italic; font-family: var(--ff); animation: fadeInOut 1.5s infinite; }
+@keyframes fadeInOut { 0%,100%{opacity:0.4} 50%{opacity:1} }
+.ai-inp-row { display: flex; padding: 12px 14px; gap: 8px; border-top: 1px solid var(--border); }
+.ai-inp { flex: 1; padding: 10px 13px; background: var(--blush); border: 1px solid rgba(201,169,110,0.2); border-radius: 4px; font-size: 13px; color: var(--text); font-family: var(--fs); outline: none; font-weight: 300; }
+.ai-inp::placeholder { color: var(--textFaint); }
+.ai-send { padding: 10px 16px; background: linear-gradient(135deg, var(--rose), var(--roseDark)); border: none; border-radius: 4px; font-size: 9px; letter-spacing: 0.18em; color: #fff; cursor: pointer; font-family: var(--fs); font-weight: 600; white-space: nowrap; }
+.ai-notice { font-size: 9.5px; color: var(--textFaint); padding: 8px 18px 12px; text-align: center; letter-spacing: 0.06em; line-height: 1.6; }
+.suggest-btn { display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; padding: 11px 14px; background: var(--blush); border: 1px solid transparent; border-radius: 4px; color: var(--textMid); font-size: 12px; cursor: pointer; margin-bottom: 8px; font-family: var(--fs); transition: all 0.2s; font-weight: 300; }
+.suggest-btn:hover { border-color: var(--border); color: var(--rose); }
+
+/* ── STEPS FEATURE ── */
+.steps-ring { display: flex; align-items: center; justify-content: center; margin: 4px 0 16px; }
+.ring-svg { transform: rotate(-90deg); }
+.ring-bg { fill: none; stroke: var(--blush); stroke-width: 8; }
+.ring-fill { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1); }
+.ring-center { position: absolute; text-align: center; }
+.ring-num { font-family: var(--ff); font-size: 32px; font-weight: 300; color: var(--roseDark); line-height: 1; }
+.ring-lbl { font-size: 9px; color: var(--textFaint); letter-spacing: 0.15em; text-transform: uppercase; margin-top: 2px; }
+.steps-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.st-box { background: var(--blush); border-radius: 5px; padding: 12px 8px; text-align: center; }
+.st-n { font-family: var(--ff); font-size: 20px; font-weight: 300; color: var(--sage); }
+.st-l { font-size: 9px; color: var(--textFaint); letter-spacing: 0.12em; text-transform: uppercase; margin-top: 3px; }
+
+/* ── MOOD ── */
+.mood-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 8px; margin-bottom: 14px; }
+.mood-btn { padding: 12px 4px; background: var(--blush); border: 2px solid transparent; border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s; font-family: var(--fs); }
+.mood-btn .emoji { font-size: 22px; display: block; margin-bottom: 3px; }
+.mood-btn .mlbl { font-size: 8px; color: var(--textFaint); letter-spacing: 0.1em; display: block; }
+.mood-btn.on { border-color: var(--rose); background: rgba(201,121,122,0.08); }
+.mood-log-item { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--blush); }
+.mood-em { font-size: 20px; }
+.mood-info { flex: 1; }
+.mood-nm { font-size: 12px; color: var(--text); font-weight: 400; }
+.mood-time { font-size: 10px; color: var(--textFaint); }
+
+/* ── BIORHYTHM ── */
+.bio-legend { display: flex; gap: 16px; margin-bottom: 12px; }
+.bio-dot { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--textMid); }
+.bio-circle { width: 8px; height: 8px; border-radius: 50%; }
+
+/* ── WEIGHT ── */
+.w-entry { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--blush); }
+.w-num { font-family: var(--ff); font-size: 22px; font-weight: 300; color: var(--roseDark); }
+.w-date { font-size: 10px; color: var(--textFaint); letter-spacing: 0.06em; margin-top: 2px; }
+.w-badge { margin-left: auto; font-size: 8px; letter-spacing: 0.15em; padding: 3px 8px; border: 1px solid rgba(201,169,110,0.3); color: var(--gold); border-radius: 10px; font-weight: 500; }
+.bmi-big { padding: 18px; background: var(--blush); border-radius: 5px; text-align: center; margin-top: 14px; }
+.bmi-n { font-family: var(--ff); font-size: 48px; font-weight: 300; color: var(--roseDark); line-height: 1; }
+.bmi-l { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--textMid); margin-top: 4px; }
+.bmi-s { font-size: 11px; color: var(--textFaint); margin-top: 6px; font-style: italic; }
+
+/* ── WEEKLY REPORT ── */
+.report-card { background: linear-gradient(135deg, rgba(26,17,24,0.95), rgba(50,30,40,0.95)); border: 1px solid rgba(201,169,110,0.3); border-radius: 8px; padding: 22px; margin-bottom: 14px; color: #f5ede3; position: relative; overflow: hidden; }
+.report-card::before { content: ''; position: absolute; top: -60px; right: -60px; width: 180px; height: 180px; background: radial-gradient(circle, rgba(201,169,110,0.15), transparent 70%); }
+.rep-eyebrow { font-size: 8px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+.rep-title { font-family: var(--ff); font-size: 22px; font-weight: 300; color: #f5ede3; margin-bottom: 14px; }
+.rep-title em { font-style: italic; color: var(--goldLight); }
+.rep-body { font-size: 12.5px; line-height: 1.8; color: rgba(245,237,227,0.75); font-weight: 300; white-space: pre-wrap; }
+.rep-body.streaming { border-right: 2px solid var(--gold); animation: cursor-blink 0.7s step-end infinite; }
+@keyframes cursor-blink { 0%,100%{border-color:var(--gold)} 50%{border-color:transparent} }
+.rep-loading { font-size: 12px; color: rgba(201,169,110,0.6); font-style: italic; font-family: var(--ff); animation: fadeInOut 1.5s infinite; }
+
+/* ── PROFILE ── */
+.profile-ring { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, var(--rose), var(--roseDark)); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 30px; }
+
+/* ── FOOTER ── */
+.footer { padding: 8px 18px 32px; text-align: center; font-size: 9px; color: var(--textFaint); letter-spacing: 0.12em; line-height: 1.8; }
+
+/* ── GRAPH ── */
+.graph-outer { padding: 4px 0 8px; }
+
+/* ── ORNAMENT ── */
+.orn { text-align: center; color: var(--textFaint); font-size: 14px; letter-spacing: 0.5em; padding: 2px 0 18px; user-select: none; }
+
+/* RESPONSIVE SCROLL */
+html { scroll-behavior: smooth; }
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-thumb { background: var(--border); }
+`;
+
+/* ══════════════════════════════════════════
+   CONSTANTS
+══════════════════════════════════════════ */
+const MEALS = ["朝食","昼食","夕食","間食"];
+const MOODS = [
+  {em:"😊",label:"最高"},
+  {em:"🙂",label:"良い"},
+  {em:"😐",label:"普通"},
+  {em:"😔",label:"低め"},
+  {em:"😩",label:"辛い"},
+];
+const QUICK = [
+  {name:"白米 (茶碗1杯)",cal:252,p:4,c:56,f:0.5},
+  {name:"目玉焼き",cal:91,p:7,c:0.5,f:7},
+  {name:"バナナ",cal:86,p:1,c:22,f:0.2},
+  {name:"ヨーグルト (無糖)",cal:62,p:4,c:7,f:2},
+  {name:"サラダチキン",cal:105,p:21,c:0,f:2},
+  {name:"食パン1枚",cal:158,p:6,c:29,f:3},
+  {name:"アボカド1/2",cal:120,p:1.5,c:2,f:11},
+  {name:"プロテインバー",cal:190,p:20,c:18,f:5},
+];
+const STEP_GOAL = 8000;
+
+/* ── Step calorie formula ── */
+function stepsToKcal(steps, weightKg) {
+  const w = parseFloat(weightKg) || 55;
+  return Math.round(steps * 0.04 * (w / 60));
+}
+function stepsToKm(steps) { return (steps * 0.75 / 1000).toFixed(2); }
+function stepsToMin(steps) { return Math.round(steps / 100); }
+
+/* ── Simple biorhythm ── */
+function biorhythm(dayN) {
+  const physical = Math.sin((2 * Math.PI * dayN) / 23);
+  const emotional = Math.sin((2 * Math.PI * dayN) / 28);
+  const intellectual = Math.sin((2 * Math.PI * dayN) / 33);
+  return { physical, emotional, intellectual };
+}
+
+/* ══════════════════════════════════════════
+   STREAMING AI HELPER
+══════════════════════════════════════════ */
+async function streamClaude(systemPrompt, userMsg, onChunk, onDone, onErr) {
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        stream: true,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userMsg }],
+      }),
+    });
+
+    if (!res.ok) {
+      // Fallback: non-streaming
+      const data = await res.clone().json().catch(() => null);
+      if (data?.content) {
+        const txt = data.content.map(c => c.text || "").join("");
+        onChunk(txt); onDone(); return;
+      }
+      onErr("エラーが発生しました。"); return;
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split("\n");
+      buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        const raw = line.slice(6).trim();
+        if (raw === "[DONE]") continue;
+        try {
+          const ev = JSON.parse(raw);
+          if (ev.type === "content_block_delta" && ev.delta?.text) {
+            onChunk(ev.delta.text);
+          }
+        } catch {}
+      }
+    }
+    onDone();
+  } catch (e) {
+    // Final fallback: non-streaming
+    try {
+      const res2 = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 800,
+          system: systemPrompt,
+          messages: [{ role: "user", content: userMsg }],
+        }),
+      });
+      const data = await res2.json();
+      const txt = data.content?.map(c => c.text || "").join("") || "エラーが発生しました。";
+      onChunk(txt); onDone();
+    } catch {
+      onErr("通信エラー。もう一度お試しください。");
+    }
+  }
+}
+
+/* ══════════════════════════════════════════
+   MAIN COMPONENT
+══════════════════════════════════════════ */
+export default function Lumiere() {
+  const [tab, setTab] = useState("today");
+  const [profile, setProfile] = useState({ age: "28", height: "160", weight: "56", goal: "−5kg", activity: "moderate" });
+  const [profileSaved, setProfileSaved] = useState(false);
+
+  // Food
+  const [foods, setFoods] = useState([]);
+  const [fi, setFi] = useState({ name: "", cal: "", p: "", c: "", f: "", meal: "朝食" });
+
+  // Weight
+  const [wInput, setWInput] = useState("");
+  const [wLog, setWLog] = useState([]);
+
+  // Steps
+  const [stepsInput, setStepsInput] = useState("");
+  const [stepsLog, setStepsLog] = useState([]);
+
+  // Mood
+  const [moodSel, setMoodSel] = useState(null);
+  const [moodLog, setMoodLog] = useState([]);
+  const [moodNote, setMoodNote] = useState("");
+
+  // AI Chat
+  const [msgs, setMsgs] = useState([
+    { role: "ai", text: "こんにちは ✨\n今日の食事・歩数・気分、何でも相談してください。あなたの記録をもとにアドバイスします。" }
+  ]);
+  const [aiInput, setAiInput] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const msgEndRef = useRef(null);
+
+  // Weekly Report
+  const [report, setReport] = useState("");
+  const [reportLoading, setReportLoading] = useState(false);
+
+  const calorieGoal = 1600;
+  const totalCal = foods.reduce((s, f) => s + (Number(f.cal) || 0), 0);
+  const totalP = foods.reduce((s, f) => s + (Number(f.p) || 0), 0);
+  const totalC = foods.reduce((s, f) => s + (Number(f.c) || 0), 0);
+  const totalF = foods.reduce((s, f) => s + (Number(f.f) || 0), 0);
+  const remaining = Math.max(0, calorieGoal - totalCal);
+
+  const todaySteps = stepsLog[0]?.steps || 0;
+  const stepKcal = stepsToKcal(todaySteps, profile.weight);
+  const stepKm = stepsToKm(todaySteps);
+  const stepMin = stepsToMin(todaySteps);
+  const stepPct = Math.min((todaySteps / STEP_GOAL) * 100, 100);
+
+  // Net calories
+  const netCal = totalCal - stepKcal;
+
+  const today = new Date();
+  const todayStr = today.toLocaleDateString("ja-JP", { month: "long", day: "numeric", weekday: "short" });
+  const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
+  const bio = biorhythm(dayOfYear);
+
+  useEffect(() => { msgEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs, aiLoading]);
+
+  /* ── Build system context ── */
+  const buildSystem = (role = "coach") => {
+    const base = `ユーザー情報: 身長${profile.height}cm / 体重${profile.weight}kg / ${profile.age}歳 / 目標「${profile.goal}」/ 活動レベル: ${profile.activity}
+今日の食事: ${totalCal}kcal摂取 (目標${calorieGoal}kcal) / タンパク質${totalP}g / 炭水化物${totalC}g / 脂質${totalF}g
+今日の歩数: ${todaySteps}歩 / 消費カロリー約${stepKcal}kcal / ${stepKm}km / 約${stepMin}分
+ネットカロリー: ${netCal}kcal
+気分ログ: ${moodLog.slice(0,3).map(m=>`${m.label}(${m.time})`).join(", ") || "なし"}
+体重履歴: ${wLog.slice(0,5).map(w=>`${w.date}:${w.weight}kg`).join(", ") || "なし"}`;
+
+    if (role === "report") {
+      return `あなたは高級ウェルネスクリニックの専任コーチです。ユーザーの一週間のデータをもとに、温かく、具体的で、励みになるウィークリーレポートを日本語で作成してください。\n${base}\n\n以下の構成で書いてください:\n1. 今週の輝き（良かった点）\n2. 改善のヒント（2-3つ）\n3. 来週の小さな目標\n300字以内でお願いします。`;
+    }
+    return `あなたは上品な女性向けウェルネスAIコーチです。温かく、具体的で、科学的根拠のあるアドバイスを日本語でしてください。\n${base}\n\n返答は150字以内で、共感から始めてください。`;
+  };
+
+  /* ── Send AI message (streaming) ── */
+  const sendAI = useCallback(async (overrideText) => {
+    const text = (overrideText || aiInput).trim();
+    if (!text || aiLoading) return;
+    setAiInput("");
+    setMsgs(prev => [...prev, { role: "user", text }]);
+    setAiLoading(true);
+
+    let accumulated = "";
+    setMsgs(prev => [...prev, { role: "ai", text: "", streaming: true }]);
+
+    await streamClaude(
+      buildSystem("coach"),
+      text,
+      (chunk) => {
+        accumulated += chunk;
+        setMsgs(prev => {
+          const next = [...prev];
+          next[next.length - 1] = { role: "ai", text: accumulated, streaming: true };
+          return next;
+        });
+      },
+      () => {
+        setMsgs(prev => {
+          const next = [...prev];
+          next[next.length - 1] = { role: "ai", text: accumulated, streaming: false };
+          return next;
+        });
+        setAiLoading(false);
+      },
+      (errMsg) => {
+        setMsgs(prev => {
+          const next = [...prev];
+          next[next.length - 1] = { role: "ai", text: errMsg, streaming: false };
+          return next;
+        });
+        setAiLoading(false);
+      }
+    );
+  }, [aiInput, aiLoading, totalCal, totalP, totalC, totalF, todaySteps, stepKcal, netCal, profile, moodLog, wLog]);
+
+  /* ── Weekly Report (streaming) ── */
+  const genReport = async () => {
+    setReport("");
+    setReportLoading(true);
+    let acc = "";
+    await streamClaude(
+      buildSystem("report"),
+      "今週のウェルネスレポートを作成してください。",
+      (chunk) => { acc += chunk; setReport(acc); },
+      () => setReportLoading(false),
+      () => { setReport("レポートの生成に失敗しました。"); setReportLoading(false); }
+    );
+  };
+
+  const addFood = () => {
+    if (!fi.name || !fi.cal) return;
+    setFoods(prev => [...prev, { ...fi, id: Date.now() }]);
+    setFi({ name: "", cal: "", p: "", c: "", f: "", meal: fi.meal });
+  };
+
+  const saveWeight = () => {
+    if (!wInput) return;
+    setWLog(prev => [{ weight: parseFloat(wInput), date: today.toLocaleDateString("ja-JP"), id: Date.now() }, ...prev]);
+    setWInput("");
+  };
+
+  const saveSteps = () => {
+    if (!stepsInput) return;
+    setStepsLog(prev => [{ steps: parseInt(stepsInput), date: today.toLocaleDateString("ja-JP"), id: Date.now() }, ...prev]);
+    setStepsInput("");
+  };
+
+  const saveMood = () => {
+    if (moodSel === null) return;
+    const m = MOODS[moodSel];
+    setMoodLog(prev => [{ ...m, note: moodNote, time: new Date().toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" }), id: Date.now() }, ...prev]);
+    setMoodSel(null); setMoodNote("");
+  };
+
+  /* ── SVG Biorhythm ── */
+  const BioGraph = () => {
+    const days = Array.from({ length: 33 }, (_, i) => i - 16);
+    const w = 100 / 32;
+    const y = (v) => 40 - v * 34;
+    const line = (fn, period) => days.map((d, i) => `${i * w},${y(Math.sin((2 * Math.PI * (dayOfYear + d)) / period))}`).join(" ");
+    return (
+      <svg width="100%" viewBox="0 0 100 80" style={{ display: "block", marginBottom: 8 }}>
+        <line x1="50" y1="2" x2="50" y2="78" stroke="rgba(201,169,110,0.3)" strokeWidth="0.8" strokeDasharray="2,2" />
+        <line x1="0" y1="40" x2="100" y2="40" stroke="rgba(200,200,200,0.3)" strokeWidth="0.5" />
+        {[{ period: 23, color: "var(--rose)" }, { period: 28, color: "var(--gold)" }, { period: 33, color: "var(--sage)" }].map(({ period, color }) => (
+          <polyline key={period} points={line(null, period)} fill="none" stroke={color} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+        ))}
+        <circle cx="50" cy={y(bio.physical)} r="2.5" fill="var(--rose)" />
+        <circle cx="50" cy={y(bio.emotional)} r="2.5" fill="var(--gold)" />
+        <circle cx="50" cy={y(bio.intellectual)} r="2.5" fill="var(--sage)" />
+      </svg>
+    );
+  };
+
+  const calPct = Math.min((totalCal / calorieGoal) * 100, 100);
+
+  const circumference = 2 * Math.PI * 42;
+  const strokePct = circumference - (stepPct / 100) * circumference;
+
+  /* ═══════════ RENDER ═══════════ */
+  return (
+    <>
+      <style>{G}</style>
+      <div className="lm">
+
+        {/* HERO */}
+        <div className="hero">
+          <div className="hero-mesh" /><div className="hero-mesh2" />
+          <div className="hero-eyebrow">Wellness Journal</div>
+          <div className="hero-name">Lu<em>mière</em></div>
+          <div className="hero-date">{todayStr}<br /><span style={{ color: "var(--gold)" }}>✦</span></div>
+          <div className="hero-tagline">内側から輝く、あなたのために</div>
+        </div>
+
+        {/* NAV */}
+        <nav className="nav-strip">
+          {[["today","Today"],["food","Food"],["steps","Steps"],["mood","Mood"],["weight","Weight"],["ai","AI Coach"],["report","Report"],["profile","Profile"]].map(([id,l])=>(
+            <button key={id} className={`nav-btn${tab===id?" on":""}`} onClick={()=>setTab(id)}>{l}</button>
+          ))}
+        </nav>
+
+        {/* ─── TODAY ─── */}
+        {tab === "today" && (
+          <div className="sec">
+            <div className="sec-lbl">Daily Overview</div>
+
+            <div className="card">
+              <div className="stats3">
+                <div className="stat-c"><div className="stat-n">{totalCal}</div><div className="stat-u">kcal</div><div className="stat-l">摂取</div></div>
+                <div className="stat-c"><div className="stat-n">{remaining}</div><div className="stat-u">kcal</div><div className="stat-l">残り</div></div>
+                <div className="stat-c"><div className="stat-n" style={{color:"var(--sage)"}}>{stepKcal}</div><div className="stat-u">kcal</div><div className="stat-l">運動消費</div></div>
               </div>
+              <div className="prog">
+                <div className="prog-hd"><span className="prog-nm">Calorie Balance</span><span className="prog-vl" style={{color:"var(--rose)"}}>{Math.round(calPct)}%</span></div>
+                <div className="prog-track"><div className="prog-fill" style={{width:`${calPct}%`,background:"linear-gradient(90deg,var(--rose),var(--roseDark))"}}/></div>
+              </div>
+              <div style={{fontSize:11,color:"var(--textFaint)",textAlign:"center",padding:"4px 0",letterSpacing:"0.08em"}}>
+                ネットカロリー <span style={{color:"var(--roseDark)",fontFamily:"var(--ff)",fontSize:15}}>{netCal}</span> kcal
+              </div>
+            </div>
 
-              <nav className="nav-strip">
-                <button className={`nav-btn ${tab==="today"?"on":""}`} onClick={()=>setTab("today")}>Today</button>
-                <button className={`nav-btn ${tab==="food"?"on":""}`} onClick={()=>setTab("food")}>Food</button>
-                <button className={`nav-btn ${tab==="steps"?"on":""}`} onClick={()=>setTab("steps")}>Steps</button>
-                <button className={`nav-btn ${tab==="weight"?"on":""}`} onClick={()=>setTab("weight")}>Weight</button>
-                <button className={`nav-btn ${tab==="ai"?"on":""}`} onClick={()=>setTab("ai")}>AI Coach</button>
-              </nav>
+            <div className="card">
+              <div className="card-h"><em>Nutrients</em></div>
+              {[
+                {l:"PROTEIN",v:totalP,g:60,u:"g",c:"var(--rose)"},
+                {l:"CARBS",v:totalC,g:200,u:"g",c:"var(--gold)"},
+                {l:"FAT",v:totalF,g:50,u:"g",c:"var(--sage)"},
+              ].map(n=>(
+                <div key={n.l} className="prog">
+                  <div className="prog-hd"><span className="prog-nm">{n.l}</span><span className="prog-vl">{n.v}{n.u} / {n.g}{n.u}</span></div>
+                  <div className="prog-track"><div className="prog-fill" style={{width:`${Math.min((n.v/n.g)*100,100)}%`,background:n.c}}/></div>
+                </div>
+              ))}
+            </div>
 
-              {tab === "today" && (
-                <div>
-                  <div className="card">
-                    <div className="stats3">
-                      <div className="stat-c"><div className="stat-n">{totalCal}</div><div className="stat-l">摂取 (kcal)</div></div>
-                      <div className="stat-c"><div className="stat-n">{remaining}</div><div className="stat-l">残り (kcal)</div></div>
-                      <div className="stat-c"><div className="stat-n">{stepKcal}</div><div className="stat-l">消費 (kcal)</div></div>
+            <div className="card">
+              <div className="card-h"><em>Today at a Glance</em></div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                {[
+                  {icon:"👣",label:"歩数",val:`${todaySteps.toLocaleString()}歩`,sub:`${stepKm}km`},
+                  {icon:"🔥",label:"歩行消費",val:`${stepKcal}kcal`,sub:`約${stepMin}分`},
+                  {icon:"😊",label:"今日の気分",val:moodLog[0]?.em || "—",sub:moodLog[0]?.label || "未記録"},
+                  {icon:"⚖️",label:"体重",val:wLog[0]?`${wLog[0].weight}kg`:"—",sub:wLog.length>1?`前回比 ${(wLog[0].weight-wLog[1].weight>0?"+":"")}${(wLog[0].weight-(wLog[1]?.weight||wLog[0].weight)).toFixed(1)}kg`:""},
+                ].map(item=>(
+                  <div key={item.label} style={{background:"var(--blush)",borderRadius:5,padding:"12px 10px"}}>
+                    <div style={{fontSize:20,marginBottom:4}}>{item.icon}</div>
+                    <div style={{fontSize:9,color:"var(--textFaint)",letterSpacing:"0.15em",textTransform:"uppercase",marginBottom:4}}>{item.label}</div>
+                    <div style={{fontFamily:"var(--ff)",fontSize:18,color:"var(--roseDark)",lineHeight:1}}>{item.val}</div>
+                    <div style={{fontSize:10,color:"var(--textFaint)",marginTop:2}}>{item.sub}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="orn">— ✦ —</div>
+          </div>
+        )}
+
+        {/* ─── FOOD ─── */}
+        {tab === "food" && (
+          <div className="sec">
+            <div className="sec-lbl">Food Journal</div>
+            <div className="card">
+              <div className="card-h">Add <em>Entry</em></div>
+              <div className="pill-row">{MEALS.map(m=><button key={m} className={`pill${fi.meal===m?" on":""}`} onClick={()=>setFi(f=>({...f,meal:m}))}>{m}</button>)}</div>
+              <div className="ig"><label className="lbl">食べ物の名前</label><input className="inp" value={fi.name} onChange={e=>setFi(f=>({...f,name:e.target.value}))} placeholder="例：グリルサーモン" /></div>
+              <div className="grid4">
+                {[["cal","Kcal"],["p","Protein g"],["c","Carbs g"],["f","Fat g"]].map(([k,ph])=>(
+                  <div key={k}>
+                    <label className="lbl">{ph}</label>
+                    <input className="inp" style={{padding:"10px 6px",textAlign:"center"}} type="number" value={fi[k]} onChange={e=>setFi(f=>({...f,[k]:e.target.value}))} placeholder="0" />
+                  </div>
+                ))}
+              </div>
+              <button className="btn-primary" onClick={addFood}>ADD TO JOURNAL</button>
+            </div>
+
+            <div className="card">
+              <div className="card-h"><em>Quick</em> Add</div>
+              {QUICK.map(f=>(
+                <div key={f.name} className="fi">
+                  <div><div className="fi-name">{f.name}</div><div className="fi-meta">{f.cal}kcal · P{f.p}g · C{f.c}g · F{f.f}g</div></div>
+                  <button className="btn-sm" onClick={()=>setFoods(prev=>[...prev,{...f,meal:fi.meal,id:Date.now()}])}>ADD</button>
+                </div>
+              ))}
+            </div>
+
+            {foods.length > 0 && (
+              <div className="card">
+                <div className="card-h">Today's <em>Intake</em></div>
+                {foods.map(f=>(
+                  <div key={f.id} className="fi">
+                    <div><div className="fi-name">{f.name}<span className="fi-tag">{f.meal}</span></div><div className="fi-meta">{f.cal}kcal</div></div>
+                    <button className="btn-del" onClick={()=>setFoods(foods.filter(x=>x.id!==f.id))}>✕</button>
+                  </div>
+                ))}
+                <div className="total-box"><div className="total-box-n">{totalCal}</div><div className="total-box-l">Total Calories</div></div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ─── STEPS ─── */}
+        {tab === "steps" && (
+          <div className="sec">
+            <div className="sec-lbl">Activity Tracking</div>
+            <div className="card">
+              <div className="card-h"><em>Steps</em> & Burn</div>
+              <div style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"center",marginBottom:16}}>
+                <svg width={120} height={120} className="ring-svg">
+                  <circle className="ring-bg" cx="60" cy="60" r="42" />
+                  <circle className="ring-fill" cx="60" cy="60" r="42"
+                    stroke={stepPct > 80 ? "var(--sage)" : stepPct > 50 ? "var(--gold)" : "var(--rose)"}
+                    strokeDasharray={circumference}
+                    strokeDashoffset={strokePct}
+                  />
+                </svg>
+                <div style={{position:"absolute",textAlign:"center"}}>
+                  <div className="ring-num">{todaySteps > 999 ? (todaySteps/1000).toFixed(1)+"k" : todaySteps}</div>
+                  <div className="ring-lbl">Steps</div>
+                </div>
+              </div>
+              <div className="steps-stats">
+                <div className="st-box"><div className="st-n">{stepKcal}</div><div className="st-l">kcal消費</div></div>
+                <div className="st-box"><div className="st-n">{stepKm}</div><div className="st-l">km歩行</div></div>
+                <div className="st-box"><div className="st-n">{stepMin}</div><div className="st-l">分相当</div></div>
+              </div>
+            </div>
+
+            <div className="card">
+              <div className="card-h">Record <em>Steps</em></div>
+              <div className="grid2">
+                <div><label className="lbl">今日の歩数</label><input className="inp" type="number" value={stepsInput} onChange={e=>setStepsInput(e.target.value)} placeholder="例: 7500" onKeyDown={e=>e.key==="Enter"&&saveSteps()} /></div>
+                <button className="btn-gold" style={{padding:"11px 18px",width:"auto"}} onClick={saveSteps}>SAVE</button>
+              </div>
+              <div style={{fontSize:11,color:"var(--textFaint)",textAlign:"center",letterSpacing:"0.06em"}}>
+                目標 {STEP_GOAL.toLocaleString()}歩 に対して <span style={{color:"var(--rose)"}}>{Math.round(stepPct)}%</span>
+              </div>
+            </div>
+
+            <div className="card">
+              <div className="card-h"><em>Calorie</em> Balance</div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                {[
+                  {l:"食事摂取",v:totalCal,u:"kcal",c:"var(--rose)"},
+                  {l:"歩行消費",v:stepKcal,u:"kcal",c:"var(--sage)"},
+                  {l:"ネット",v:netCal,u:"kcal",c: netCal < calorieGoal ? "var(--sageDark)" : "var(--roseDark)"},
+                  {l:"目標差",v:calorieGoal-netCal,u:"kcal",c:"var(--gold)"},
+                ].map(x=>(
+                  <div key={x.l} style={{background:"var(--blush)",borderRadius:5,padding:"12px",textAlign:"center"}}>
+                    <div style={{fontFamily:"var(--ff)",fontSize:22,color:x.c,lineHeight:1}}>{x.v > 0 ? x.v : 0}</div>
+                    <div style={{fontSize:9,color:"var(--textFaint)",letterSpacing:"0.12em",textTransform:"uppercase",marginTop:4}}>{x.l} ({x.u})</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {stepsLog.length > 0 && (
+              <div className="card">
+                <div className="card-h">Step <em>History</em></div>
+                {stepsLog.slice(0,7).map((s,i)=>(
+                  <div key={s.id} className="w-entry">
+                    <div>
+                      <div style={{fontFamily:"var(--ff)",fontSize:20,color:"var(--sage)",lineHeight:1}}>{s.steps.toLocaleString()}<span style={{fontSize:12,color:"var(--textFaint)",marginLeft:4}}>歩</span></div>
+                      <div className="w-date">{s.date} · {stepsToKcal(s.steps, profile.weight)}kcal消費</div>
+                    </div>
+                    {i===0 && <div className="w-badge">TODAY</div>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ─── MOOD ─── */}
+        {tab === "mood" && (
+          <div className="sec">
+            <div className="sec-lbl">Mood & Wellbeing</div>
+            <div className="card">
+              <div className="card-h">Today's <em>Mood</em></div>
+              <div className="mood-grid">
+                {MOODS.map((m,i)=>(
+                  <button key={i} className={`mood-btn${moodSel===i?" on":""}`} onClick={()=>setMoodSel(i)}>
+                    <span className="emoji">{m.em}</span><span className="mlbl">{m.label}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="ig"><label className="lbl">メモ (任意)</label><input className="inp" value={moodNote} onChange={e=>setMoodNote(e.target.value)} placeholder="今日はどんな気分ですか？" /></div>
+              <button className="btn-primary" onClick={saveMood}>RECORD MOOD</button>
+            </div>
+
+            <div className="card">
+              <div className="card-h"><em>Biorhythm</em> Today</div>
+              <BioGraph />
+              <div className="bio-legend">
+                {[{c:"var(--rose)",l:"身体"},{ c:"var(--gold)",l:"感情"},{c:"var(--sage)",l:"知性"}].map(b=>(
+                  <div key={b.l} className="bio-dot"><div className="bio-circle" style={{background:b.c}}/>{b.l}</div>
+                ))}
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginTop:8}}>
+                {[
+                  {l:"身体",v:bio.physical,c:"var(--rose)"},
+                  {l:"感情",v:bio.emotional,c:"var(--gold)"},
+                  {l:"知性",v:bio.intellectual,c:"var(--sage)"},
+                ].map(b=>(
+                  <div key={b.l} style={{background:"var(--blush)",borderRadius:5,padding:"10px",textAlign:"center"}}>
+                    <div style={{fontFamily:"var(--ff)",fontSize:18,color:b.c}}>{b.v > 0 ? "↑" : "↓"} {Math.abs(b.v*100).toFixed(0)}%</div>
+                    <div style={{fontSize:9,color:"var(--textFaint)",letterSpacing:"0.12em",marginTop:3}}>{b.l}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{fontSize:11,color:"var(--textFaint)",marginTop:12,textAlign:"center",lineHeight:1.7}}>
+                {bio.physical > 0.3 ? "💪 身体のコンディションが良い日です" : bio.physical < -0.3 ? "🛌 今日は無理せずゆっくり過ごしましょう" : "⚖️ バランスの取れた一日です"}
+              </div>
+            </div>
+
+            {moodLog.length > 0 && (
+              <div className="card">
+                <div className="card-h">Mood <em>Log</em></div>
+                {moodLog.slice(0,8).map(m=>(
+                  <div key={m.id} className="mood-log-item">
+                    <div className="mood-em">{m.em}</div>
+                    <div className="mood-info">
+                      <div className="mood-nm">{m.label}{m.note && ` — ${m.note}`}</div>
+                      <div className="mood-time">{m.time}</div>
                     </div>
                   </div>
-                  <div className="card">
-                    <p style={{fontSize:"14px", color:"var(--textMid)"}}>今日の気分: <strong>{mood}</strong></p>
-                    <p style={{fontSize:"14px", color:"var(--textMid)", marginTop:"8px"}}>現在の体重: <strong>{weight} kg</strong></p>
-                    <p style={{fontSize:"14px", color:"var(--textMid)", marginTop:"8px"}}>今日の歩数: <strong>{steps.toLocaleString()} 歩</strong></p>
-                  </div>
-                </div>
-              )}
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
-              {tab === "food" && (
-                <div>
-                  <div className="card">
-                    <label className="lbl">食べ物の名前</label>
-                    <input className="inp" value={foodName} onChange={e=>setFoodName(e.target.value)} placeholder="例：サラダ" />
-                    <label className="lbl">カロリー (kcal)</label>
-                    <input className="inp" type="number" value={foodCal} onChange={e=>setFoodCal(e.target.value)} placeholder="0" />
-                    <button className="btn-primary" onClick={()=>addFood(foodName, foodCal)}>追加する</button>
-                  </div>
-                  <div className="card">
-                    <h3>クイック追加</h3>
-                    {QUICK.map(q => (
-                      <div key={q.name} className="fi">
-                        <span>{q.name} ({q.cal}kcal)</span>
-                        <button className="btn-sm" onClick={()=>addFood(q.name, q.cal)}>+ Add</button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {tab === "steps" && (
-                <div className="card">
-                  <label className="lbl">本日の歩数を入力</label>
-                  <input className="inp" type="number" value={stepsInput} onChange={e=>setStepsInput(e.target.value)} placeholder="例: 6000" />
-                  <button className="btn-primary" onClick={()=>{ if(stepsInput){setSteps(parseInt(stepsInput)); setStepsInput("");} }}>歩数を保存</button>
-                </div>
-              )}
-
-              {tab === "weight" && (
-                <div>
-                  <div className="card">
-                    <label className="lbl">現在の体重 (kg)</label>
-                    <input className="inp" type="number" step="0.1" value={weightInput} onChange={e=>setWeightInput(e.target.value)} placeholder="56.0" />
-                    <button className="btn-primary" onClick={()=>{ if(weightInput){setWeight(weightInput); setWeightInput("");} }}>体重を保存</button>
-                  </div>
-                  <div className="card">
-                    <div className="bmi-big">{weight} kg</div>
-                  </div>
-                </div>
-              )}
-
-              {tab === "ai" && (
-                <div className="ai-wrap">
-                  <div className="ai-msgs">
-                    {msgs.map((m, i) => (
-                      <div key={i} className={m.role === "user" ? "msg-u" : "msg-a"}>{m.text}</div>
-                    ))}
-                  </div>
-                  <div className="ai-inp-row">
-                    <input className="ai-inp" value={aiInput} onChange={e=>setAiInput(e.target.value)} placeholder="メッセージを入力..." />
-                    <button className="ai-send" onClick={sendAI}>送信</button>
-                  </div>
-                </div>
-              )}
-
-              <div className="footer">Lumière Wellness · アカウント不要</div>
+        {/* ─── WEIGHT ─── */}
+        {tab === "weight" && (
+          <div className="sec">
+            <div className="sec-lbl">Body Tracking</div>
+            <div className="card">
+              <div className="card-h">Record <em>Weight</em></div>
+              <div className="grid2">
+                <div><label className="lbl">体重 (kg)</label><input className="inp" type="number" step="0.1" value={wInput} onChange={e=>setWInput(e.target.value)} placeholder="例: 54.5" onKeyDown={e=>e.key==="Enter"&&saveWeight()} /></div>
+                <button className="btn-primary" style={{padding:"11px 18px",width:"auto"}} onClick={saveWeight}>SAVE</button>
+              </div>
             </div>
-          );
-        }
 
-        ReactDOM.render(<Lumiere />, document.getElementById('root'));
-    </script>
-</body>
-</html>
+            {wLog.length > 1 && (
+              <div className="card">
+                <div className="card-h"><em>Trend</em></div>
+                <div className="graph-outer">
+                  {(()=>{
+                    const vals=[...wLog].reverse().map(w=>w.weight);
+                    const min=Math.min(...vals)-0.3, max=Math.max(...vals)+0.3, rng=max-min||1, n=vals.length;
+                    const pts=vals.map((v,i)=>`${(i/(n-1))*96+2},${62-((v-min)/rng)*52}`).join(" ");
+                    const area=`${pts} 96,68 2,68`;
+                    return (
+                      <svg width="100%" viewBox="0 0 100 72" preserveAspectRatio="none" style={{display:"block"}}>
+                        <defs>
+                          <linearGradient id="wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--rose)" stopOpacity="0.2"/><stop offset="100%" stopColor="var(--rose)" stopOpacity="0"/></linearGradient>
+                          <linearGradient id="wl" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="var(--rose)"/><stop offset="100%" stopColor="var(--roseDark)"/></linearGradient>
+                        </defs>
+                        <polygon points={area} fill="url(#wg)"/>
+                        <polyline points={pts} fill="none" stroke="url(#wl)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        {vals.map((v,i)=><circle key={i} cx={(i/(n-1))*96+2} cy={62-((v-min)/rng)*52} r="2" fill="var(--rose)"/>)}
+                      </svg>
+                    );
+                  })()}
+                </div>
+              </div>
+            )}
+
+            {wLog.length > 0 && (
+              <div className="card">
+                <div className="card-h"><em>History</em></div>
+                {wLog.map((entry,i)=>(
+                  <div key={entry.id} className="w-entry">
+                    <div><div className="w-num">{entry.weight} <span style={{fontSize:13,color:"var(--textFaint)"}}>kg</span></div><div className="w-date">{entry.date}</div></div>
+                    {i===0 && <div className="w-badge">LATEST</div>}
+                  </div>
+                ))}
+                {profile.height && wLog.length > 0 && (
+                  <div className="bmi-big">
+                    <div className="bmi-n">{(wLog[0].weight/Math.pow(parseFloat(profile.height)/100,2)).toFixed(1)}</div>
+                    <div className="bmi-l">BMI Index</div>
+                    <div className="bmi-s">{(()=>{const b=wLog[0].weight/Math.pow(parseFloat(profile.height)/100,2);return b<18.5?"低体重 — 少し増やしましょう":b<25?"標準 — 理想的な範囲です ✨":b<30?"やや過体重":"肥満"})()}</div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ─── AI COACH ─── */}
+        {tab === "ai" && (
+          <div className="sec">
+            <div className="sec-lbl">AI Wellness Coach</div>
+            <div className="ai-wrap">
+              <div className="ai-hdr">
+                <div className="ai-dot"/>
+                <div className="ai-hdr-txt">Claude AI · ストリーミング対応</div>
+                <div className="ai-hdr-badge">LIVE</div>
+              </div>
+              <div className="ai-msgs">
+                {msgs.map((m,i)=>(
+                  <div key={i} className={m.role==="user"?"msg-u":"msg-a"} style={m.streaming?{borderRight:"2px solid var(--rose)"}:{}}>
+                    {m.text.split("\n").map((l,j,a)=><span key={j}>{l}{j<a.length-1&&<br/>}</span>)}
+                  </div>
+                ))}
+                {aiLoading && msgs[msgs.length-1]?.text==="" && <div className="msg-thinking">回答を生成しています…</div>}
+                <div ref={msgEndRef}/>
+              </div>
+              <div className="ai-inp-row">
+                <input className="ai-inp" value={aiInput} onChange={e=>setAiInput(e.target.value)}
+                  onKeyDown={e=>e.key==="Enter"&&sendAI()} placeholder="メッセージを入力… (Enterで送信)" />
+                <button className="ai-send" onClick={()=>sendAI()} disabled={aiLoading}>SEND</button>
+              </div>
+              <div className="ai-notice">Claude AIが直接ストリーミングで応答。アカウント不要・保存なし。</div>
+            </div>
+
+            <div className="card">
+              <div className="card-h"><em>Smart</em> Suggestions</div>
+              {[
+                "今日の食事バランスを評価して",
+                `${todaySteps}歩歩いたよ！あと何すればいい？`,
+                "夕食のおすすめレシピを教えて",
+                "停滞期かも。どうすればいい？",
+                "今日の気分が低い。食事で改善できる？",
+                "週末の食べすぎをリセットしたい",
+              ].map(q=>(
+                <button key={q} className="suggest-btn" onClick={()=>sendAI(q)}>
+                  {q}<span style={{color:"var(--gold)"}}>→</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ─── WEEKLY REPORT ─── */}
+        {tab === "report" && (
+          <div className="sec">
+            <div className="sec-lbl">AI Weekly Report</div>
+
+            <div className="report-card">
+              <div className="rep-eyebrow">Personalized by Claude AI</div>
+              <div className="rep-title">Weekly <em>Wellness</em><br />Report</div>
+              {report ? (
+                <div className="rep-body">{report}</div>
+              ) : reportLoading ? (
+                <div className="rep-loading">レポートを生成しています…</div>
+              ) : (
+                <div className="rep-body" style={{color:"rgba(245,237,227,0.35)"}}>ボタンを押すとAIがあなたの記録を分析し、パーソナルなウィークリーレポートを生成します。</div>
+              )}
+            </div>
+
+            <button className="btn-gold" onClick={genReport} disabled={reportLoading}>
+              {reportLoading ? "生成中…" : "✦  AI WEEKLY REPORT を生成"}
+            </button>
+
+            <div className="card" style={{marginTop:14}}>
+              <div className="card-h">This <em>Week</em></div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                {[
+                  {l:"記録した食事",v:`${foods.length}品目`},
+                  {l:"今日の歩数",v:`${todaySteps.toLocaleString()}歩`},
+                  {l:"消費カロリー",v:`${stepKcal}kcal`},
+                  {l:"気分ログ",v:`${moodLog.length}件`},
+                ].map(x=>(
+                  <div key={x.l} style={{background:"var(--blush)",borderRadius:5,padding:"12px",textAlign:"center"}}>
+                    <div style={{fontFamily:"var(--ff)",fontSize:18,color:"var(--roseDark)",lineHeight:1}}>{x.v}</div>
+                    <div style={{fontSize:9,color:"var(--textFaint)",letterSpacing:"0.12em",textTransform:"uppercase",marginTop:4}}>{x.l}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ─── PROFILE ─── */}
+        {tab === "profile" && (
+          <div className="sec">
+            <div className="sec-lbl">Your Profile</div>
+            <div className="card">
+              <div className="profile-ring">🌸</div>
+              {[
+                ["age","Age","例: 28","number"],
+                ["height","Height (cm)","例: 160","number"],
+                ["weight","Current Weight (kg)","例: 56.0","number"],
+                ["goal","Goal","例: 夏までに −5kg","text"],
+              ].map(([k,l,ph,t])=>(
+                <div key={k} className="ig"><label className="lbl">{l}</label><input className="inp" type={t} value={profile[k]} onChange={e=>setProfile(p=>({...p,[k]:e.target.value}))} placeholder={ph} /></div>
+              ))}
+              <div className="ig">
+                <label className="lbl">Activity Level</label>
+                <select className="sel" value={profile.activity} onChange={e=>setProfile(p=>({...p,activity:e.target.value}))}>
+                  <option value="low">Low — デスクワーク中心</option>
+                  <option value="moderate">Moderate — 週2〜3回運動</option>
+                  <option value="high">High — 毎日運動</option>
+                </select>
+              </div>
+              <button className="btn-primary" onClick={()=>setProfileSaved(true)}>
+                {profileSaved ? "✓  SAVED" : "SAVE PROFILE"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="footer">
+          Lumière Wellness · Powered by Claude AI<br />
+          アカウント不要 · データはこのセッションのみ保持
+        </div>
+      </div>
+    </>
+  );
+}
